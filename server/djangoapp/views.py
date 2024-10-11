@@ -7,13 +7,14 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import logout
 from django.contrib import messages
 from datetime import datetime
+from .models import CarMake, CarModel
 
 from django.http import JsonResponse
 from django.contrib.auth import login, authenticate
 import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
-# from .populate import initiate
+from .populate import initiate
 
 
 # Get an instance of a logger
@@ -42,6 +43,17 @@ def login_user(request):
 def logout_request(request):
     logout(request)
     return JsonResponse({"userName": ""})
+
+def get_cars(request):
+    count = CarMake.objects.count()
+    if count == 0:
+        initiate()
+    car_models = CarModel.objects.select_related('car_make')
+    cars = [
+        {"CarModel": car_model.name, "CarMake": car_model.car_make.name}
+        for car_model in car_models
+    ]
+    return JsonResponse({"CarModels": cars})
 
 # Create a `registration` view to handle sign up request
 @csrf_exempt
